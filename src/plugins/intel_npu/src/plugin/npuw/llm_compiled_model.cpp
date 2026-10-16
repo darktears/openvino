@@ -2052,12 +2052,10 @@ void ov::npuw::LLMCompiledModel::validate_imported_sequence_extents() const {
         if (!top.has_value()) {
             if (std::strcmp(name, layer_names::position_ids) == 0) {
                 // AddPositionIdsParam synthesizes this child port even when the original model
-                // has no `position_ids` input of its own (the LFM-2 case); LLMInferRequest::
-                // infer() then synthesizes a matching rank-2 i64 source tensor at runtime (see
-                // `position_ids = ov::make_tensor(...)` there), batched off `input_ids`. The
-                // The synthesized source is always rank 2 (LFM-2 is never VLM); match its
-                // batch to the compiled input_ids sibling because no top-level position_ids
-                // port exists to establish that relationship.
+                // has no `position_ids` input of its own; LLMInferRequest::infer() synthesizes
+                // rank-2 i64 positions batched from its selected input (`input_ids` or
+                // `inputs_embeds`). Match that batch to the compiled input source because no
+                // top-level position_ids port exists to establish the relationship.
                 OPENVINO_ASSERT(rank == 2, "NPUW blob: synthesized input 'position_ids' rank (", rank, ") must be 2.");
                 OPENVINO_ASSERT(child.get_element_type() == ov::element::i64,
                                 "NPUW blob: synthesized input 'position_ids' element type (",
